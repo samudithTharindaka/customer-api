@@ -47,7 +47,6 @@ coverage.xml
 # Django stuff:
 *.log
 local_settings.py
-db.sqlite3
 
 # Flask stuff:
 instance/
@@ -104,8 +103,21 @@ dmypy.json
 *.swp
 *.swo
 *~
-
-# OS
 .DS_Store
-Thumbs.db
 
+# Node modules
+node_modules/
+
+# Test files
+test_*.py
+*_test.py
+tests/
+
+# Temporary files
+*.tmp
+*.bak
+cookies.txt
+
+# Build artifacts
+*.pyc
+*.pyo

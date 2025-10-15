@@ -51,46 +51,6 @@ def check_customer_registered(customer_name):
 
 
 @frappe.whitelist(allow_guest=False)
-def check_customer_by_id(customer_id):
-	"""
-	Check if a customer exists by customer ID.
-	
-	Args:
-		customer_id (str): The customer ID to check
-		
-	Returns:
-		dict: Dictionary containing customer registration status
-	"""
-	
-	if not customer_id:
-		frappe.throw(_("Customer ID is required"))
-	
-	# Check if customer exists
-	if frappe.db.exists("Customer", customer_id):
-		customer_doc = frappe.get_doc("Customer", customer_id)
-		
-		return {
-			"customer_id": customer_id,
-			"is_registered": True,
-			"customer_name": customer_doc.customer_name,
-			"customer_group": customer_doc.customer_group,
-			"territory": customer_doc.territory,
-			"customer_type": customer_doc.customer_type,
-			"disabled": customer_doc.disabled
-		}
-	else:
-		return {
-			"customer_id": customer_id,
-			"is_registered": False,
-			"customer_name": None,
-			"customer_group": None,
-			"territory": None,
-			"customer_type": None,
-			"disabled": None
-		}
-
-
-@frappe.whitelist(allow_guest=False)
 def create_customer(customer_name, customer_type="Individual", customer_group=None, territory=None, email=None, mobile=None, phone=None, address_line1=None, address_line2=None, city=None, state=None, country=None, pincode=None):
 	"""
 	Create a new customer in the system.

@@ -73,45 +73,7 @@ curl -X POST https://your-site.com/api/method/customer_api.api.check_customer_re
 
 ---
 
-### 2. Check Customer Registration by ID
-
-**Endpoint:** `/api/method/customer_api.api.check_customer_by_id`
-
-**Method:** `GET` or `POST`
-
-**Description:** Check if a customer exists in the system by their customer ID.
-
-**Parameters:**
-- `customer_id` (required): The customer ID to check
-
-**Example Request:**
-```bash
-curl -X POST https://your-site.com/api/method/customer_api.api.check_customer_by_id \
-  -H "Authorization: token your_api_key:your_api_secret" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "customer_id": "CUST-00001"
-  }'
-```
-
-**Example Response (Customer Found):**
-```json
-{
-  "message": {
-    "customer_id": "CUST-00001",
-    "is_registered": true,
-    "customer_name": "John Doe",
-    "customer_group": "Individual",
-    "territory": "All Territories",
-    "customer_type": "Individual",
-    "disabled": 0
-  }
-}
-```
-
----
-
-### 3. Create Customer
+### 2. Create Customer
 
 **Endpoint:** `/api/method/customer_api.api.create_customer`
 
