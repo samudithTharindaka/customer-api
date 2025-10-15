@@ -1,0 +1,674 @@
+openapi: 3.0.3
+info:
+  title: Customer API for ERPNext
+  description: |
+    ## API for Customer Management in ERPNext
+    
+    This API provides two main endpoints for customer management:
+    1. **Check Customer Availability** - Verify if a customer exists by name
+    2. **Create Customer** - Create new customers with full contact and address details
+    
+    ### Features
+    - ✅ Check if customer is already registered
+    - ✅ Create customers with contact information (email, mobile, phone)
+    - ✅ Create customers with address details
+    - ✅ Automatic contact and address linking
+    - ✅ Duplicate customer detection
+    - ✅ Support for Individual and Company customer types
+    
+    ### Authentication
+    All endpoints require authentication using either:
+    - **Session Cookie**: Login via `/api/method/login` endpoint first
+    - **API Key/Secret**: Use `Authorization: token {api_key}:{api_secret}` header
+    
+    ### Getting API Credentials
+    1. Login to ERPNext
+    2. Go to: User → Your User → API Access
+    3. Click "Generate Keys"
+    4. Copy the API Key and API Secret
+    
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://erpsite.com:8000
+    description: Development Server
+  - url: http://localhost:8000
+    description: Local Development
+  - url: https://your-domain.com
+    description: Production Server (Replace with your domain)
+
+tags:
+  - name: Customer Availability
+    description: Check if customers exist in the system
+  - name: Customer Creation
+    description: Create new customers with contact and address information
+
+security:
+  - sessionAuth: []
+  - apiKeyAuth: []
+
+paths:
+  /api/method/customer_api.api.check_customer_registered:
+    get:
+      tags:
+        - Customer Availability
+      summary: Check if customer exists by name
+      description: |
+        Checks if a customer is already registered in the ERPNext system by their name.
+        
+        ### Use Cases
+        - Verify customer exists before creating order
+        - Check for duplicates before registration
+        - Validate customer data in external systems
+        
+        ### Returns
+        - Customer details if found (is_registered: true)
+        - Not found status if customer doesn't exist (is_registered: false)
+        
+      operationId: checkCustomerAvailability
+      parameters:
+        - name: customer_name
+          in: query
+          required: true
+          description: The exact name of the customer to search for
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 140
+          example: "John Doe"
+          
+      responses:
+        '200':
+          description: Successful response - returns customer status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    $ref: '#/components/schemas/CustomerCheckResponse'
+              examples:
+                customerExists:
+                  summary: Customer is registered
+                  description: Response when customer is found in the system
+                  value:
+                    message:
+                      customer_name: "John Doe"
+                      is_registered: true
+                      customer_id: "John Doe"
+                      customer_group: "Individual"
+                      territory: "All Territories"
+                      customer_type: "Individual"
+                      disabled: 0
+                      
+                customerNotFound:
+                  summary: Customer not registered
+                  description: Response when customer is not found
+                  value:
+                    message:
+                      customer_name: "Jane Smith"
+                      is_registered: false
+                      customer_id: null
+                      customer_group: null
+                      territory: null
+                      customer_type: null
+                      disabled: null
+                      
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/method/customer_api.api.create_customer:
+    post:
+      tags:
+        - Customer Creation
+      summary: Create a new customer
+      description: |
+        Creates a new customer in the ERPNext system with optional contact and address information.
+        
+        ### What Gets Created
+        
+        When you call this endpoint, the following records are created in ERPNext:
+        
+        1. **Customer Document** (Always created)
+           - Customer ID (auto-generated or uses customer_name)
+           - Customer Type (Individual or Company)
+           - Customer Group (from parameter or system default)
+           - Territory (from parameter or system default)
+        
+        2. **Contact Document** (Created if email, mobile, or phone is provided)
+           - Linked to the customer
+           - Set as primary contact
+           - Email address(es)
+           - Phone number(s)
+           - Email and mobile will appear on customer card
+        
+        3. **Address Document** (Created if address fields are provided)
+           - Linked to the customer
+           - Address Type: Billing
+           - Full address with all provided fields
+           - Country validation included
+        
+        ### Features
+        - ✅ **Duplicate Detection**: Automatically checks if customer name already exists
+        - ✅ **Contact Linking**: Contact information automatically linked to customer
+        - ✅ **Address Linking**: Address automatically linked to customer
+        - ✅ **Default Values**: Uses system defaults for customer group and territory if not provided
+        - ✅ **Validation**: Validates customer type, country, and required fields
+        - ✅ **Error Handling**: Graceful error handling with rollback on failures
+        - ✅ **Multiple Phones**: Supports both mobile and phone numbers
+        
+        ### Business Logic
+        - If customer name already exists, returns error without creating duplicate
+        - Contact is only created if at least one of: email, mobile, or phone is provided
+        - Address is only created if at least one of: address_line1, city, or country is provided
+        - Customer Type must be either "Individual" or "Company"
+        - Default Customer Group: "All Customer Groups" (or from Selling Settings)
+        - Default Territory: "All Territories" (or from Selling Settings)
+        
+      operationId: createCustomer
+      
+      requestBody:
+        required: true
+        description: Customer data with optional contact and address information
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerRequest'
+            examples:
+              minimalCustomer:
+                summary: Minimal - Only Name
+                description: Create customer with just a name (no contact or address)
+                value:
+                  customer_name: "John Doe"
+                  
+              customerWithEmail:
+                summary: With Email
+                description: Customer with email - creates customer + contact
+                value:
+                  customer_name: "Jane Smith"
+                  email: "jane.smith@example.com"
+                  
+              customerWithContact:
+                summary: With Full Contact Info
+                description: Customer with email, mobile, and phone
+                value:
+                  customer_name: "Robert Johnson"
+                  customer_type: "Individual"
+                  email: "robert.j@example.com"
+                  mobile: "+1-555-1234"
+                  phone: "+1-555-5678"
+                  
+              customerWithAddress:
+                summary: With Contact and Address
+                description: Complete customer with contact info and address
+                value:
+                  customer_name: "Alice Williams"
+                  customer_type: "Individual"
+                  email: "alice.w@example.com"
+                  mobile: "+1-555-9999"
+                  address_line1: "123 Main Street"
+                  address_line2: "Suite 100"
+                  city: "New York"
+                  state: "NY"
+                  country: "United States"
+                  pincode: "10001"
+                  
+              companyCustomer:
+                summary: Company Type Customer
+                description: Company with full details
+                value:
+                  customer_name: "TechCorp Solutions Ltd"
+                  customer_type: "Company"
+                  customer_group: "Commercial"
+                  territory: "United States"
+                  email: "contact@techcorp.com"
+                  mobile: "+1-800-TECHCORP"
+                  address_line1: "456 Corporate Drive"
+                  city: "San Francisco"
+                  state: "California"
+                  country: "United States"
+                  pincode: "94102"
+                  
+      responses:
+        '200':
+          description: Customer creation response (check 'success' field)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    $ref: '#/components/schemas/CreateCustomerResponse'
+              examples:
+                successMinimal:
+                  summary: Success - Minimal Customer
+                  description: Customer created with just name (no contact/address)
+                  value:
+                    message:
+                      success: true
+                      customer_id: "John Doe"
+                      customer_name: "John Doe"
+                      customer_type: "Individual"
+                      customer_group: "All Customer Groups"
+                      territory: "All Territories"
+                      contact_id: null
+                      address_id: null
+                      message: "Customer created successfully"
+                      
+                successWithContact:
+                  summary: Success - With Contact
+                  description: Customer created with contact information
+                  value:
+                    message:
+                      success: true
+                      customer_id: "Jane Smith"
+                      customer_name: "Jane Smith"
+                      customer_type: "Individual"
+                      customer_group: "All Customer Groups"
+                      territory: "All Territories"
+                      contact_id: "Jane Smith-Jane Smith"
+                      address_id: null
+                      message: "Customer created successfully"
+                      
+                successComplete:
+                  summary: Success - Complete Customer
+                  description: Customer created with contact and address
+                  value:
+                    message:
+                      success: true
+                      customer_id: "Alice Williams"
+                      customer_name: "Alice Williams"
+                      customer_type: "Individual"
+                      customer_group: "All Customer Groups"
+                      territory: "All Territories"
+                      contact_id: "Alice Williams-Alice Williams"
+                      address_id: "Alice Williams-Billing"
+                      message: "Customer created successfully"
+                      
+                duplicateError:
+                  summary: Error - Duplicate Customer
+                  description: Customer with this name already exists
+                  value:
+                    message:
+                      success: false
+                      customer_id: "John Doe"
+                      customer_name: "John Doe"
+                      message: "Customer already exists with this name"
+                      
+                validationError:
+                  summary: Error - Invalid Customer Type
+                  description: Customer type must be Individual or Company
+                  value:
+                    message:
+                      success: false
+                      customer_id: null
+                      customer_name: "Test Customer"
+                      message: "Error creating customer: Customer type must be 'Individual' or 'Company'"
+                      
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: sid
+      description: |
+        Session cookie authentication. 
+        
+        **How to get session cookie:**
+        1. POST to `/api/method/login` with username and password
+        2. Cookie will be set automatically
+        3. Use cookie in subsequent requests
+        
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: |
+        API Key authentication using Authorization header.
+        
+        **Format:** `token {api_key}:{api_secret}`
+        
+        **How to get API keys:**
+        1. Login to ERPNext
+        2. Go to User → Your User
+        3. Scroll to "API Access" section
+        4. Click "Generate Keys"
+        5. Copy API Key and API Secret
+        
+        **Example:**
+        ```
+        Authorization: token a1b2c3d4e5f6g7h8:i9j0k1l2m3n4o5p6
+        ```
+
+  schemas:
+    CustomerCheckResponse:
+      type: object
+      description: Response when checking if customer exists
+      required:
+        - customer_name
+        - is_registered
+      properties:
+        customer_name:
+          type: string
+          description: The customer name that was searched for
+          example: "John Doe"
+        is_registered:
+          type: boolean
+          description: |
+            **true**: Customer exists in the system
+            **false**: Customer not found
+          example: true
+        customer_id:
+          type: string
+          nullable: true
+          description: |
+            The customer ID (usually same as customer_name in ERPNext).
+            **null** if customer not found.
+          example: "John Doe"
+        customer_group:
+          type: string
+          nullable: true
+          description: |
+            The customer group (e.g., "Individual", "Commercial").
+            **null** if customer not found.
+          example: "Individual"
+        territory:
+          type: string
+          nullable: true
+          description: |
+            The territory (e.g., "All Territories", "United States").
+            **null** if customer not found.
+          example: "All Territories"
+        customer_type:
+          type: string
+          nullable: true
+          description: |
+            The type of customer: "Individual" or "Company".
+            **null** if customer not found.
+          enum:
+            - Individual
+            - Company
+          example: "Individual"
+        disabled:
+          type: integer
+          nullable: true
+          description: |
+            Whether customer is disabled:
+            - **0**: Active customer
+            - **1**: Disabled customer
+            - **null**: Customer not found
+          enum:
+            - 0
+            - 1
+          example: 0
+
+    CreateCustomerRequest:
+      type: object
+      required:
+        - customer_name
+      properties:
+        customer_name:
+          type: string
+          description: |
+            **REQUIRED**. The full name of the customer.
+            - Must be unique in the system
+            - Will be used as customer ID
+            - Maximum 140 characters
+          minLength: 1
+          maxLength: 140
+          example: "John Doe"
+          
+        customer_type:
+          type: string
+          description: |
+            Type of customer. Must be either:
+            - **Individual**: For personal customers (default)
+            - **Company**: For business customers
+          enum:
+            - Individual
+            - Company
+          default: Individual
+          example: "Individual"
+          
+        customer_group:
+          type: string
+          description: |
+            Customer group for segmentation.
+            - If not provided, uses system default from Selling Settings
+            - Common values: "Individual", "Commercial", "Government"
+          example: "Commercial"
+          nullable: true
+          
+        territory:
+          type: string
+          description: |
+            Geographic territory for the customer.
+            - If not provided, uses system default from Selling Settings
+            - Examples: "United States", "Europe", "All Territories"
+          example: "United States"
+          nullable: true
+          
+        email:
+          type: string
+          format: email
+          description: |
+            Customer's email address.
+            - If provided, a Contact will be created
+            - Will appear on customer card
+            - Can be used for communication
+          example: "john.doe@example.com"
+          nullable: true
+          
+        mobile:
+          type: string
+          description: |
+            Customer's mobile phone number.
+            - If provided, a Contact will be created
+            - Will appear on customer card
+            - Can include country code
+          example: "+1-555-1234"
+          nullable: true
+          
+        phone:
+          type: string
+          description: |
+            Customer's landline/office phone number.
+            - If provided, a Contact will be created
+            - Can have both mobile and phone
+          example: "+1-555-5678"
+          nullable: true
+          
+        address_line1:
+          type: string
+          description: |
+            First line of address (street address).
+            - If provided, an Address will be created
+          maxLength: 140
+          example: "123 Main Street"
+          nullable: true
+          
+        address_line2:
+          type: string
+          description: |
+            Second line of address (apartment, suite, etc.).
+            - Optional additional address information
+          maxLength: 140
+          example: "Suite 100"
+          nullable: true
+          
+        city:
+          type: string
+          description: City name
+          maxLength: 140
+          example: "New York"
+          nullable: true
+          
+        state:
+          type: string
+          description: State or Province name
+          example: "NY"
+          nullable: true
+          
+        country:
+          type: string
+          description: |
+            Country name.
+            - Must match a country in ERPNext Country list
+            - If not provided but address given, uses system default
+            - Examples: "United States", "United Kingdom", "India"
+          example: "United States"
+          nullable: true
+          
+        pincode:
+          type: string
+          description: Postal code or ZIP code
+          example: "10001"
+          nullable: true
+
+    CreateCustomerResponse:
+      type: object
+      description: Response after attempting to create a customer
+      required:
+        - success
+        - customer_name
+        - message
+      properties:
+        success:
+          type: boolean
+          description: |
+            **true**: Customer created successfully
+            **false**: Customer creation failed (duplicate or error)
+          example: true
+          
+        customer_id:
+          type: string
+          nullable: true
+          description: |
+            The ID of the created customer (usually same as customer_name).
+            - **null** if creation failed
+            - Can be used to fetch customer details
+          example: "John Doe"
+          
+        customer_name:
+          type: string
+          description: The name of the customer that was attempted to be created
+          example: "John Doe"
+          
+        customer_type:
+          type: string
+          description: The type of customer created
+          enum:
+            - Individual
+            - Company
+          example: "Individual"
+          
+        customer_group:
+          type: string
+          description: The customer group assigned
+          example: "All Customer Groups"
+          
+        territory:
+          type: string
+          description: The territory assigned
+          example: "All Territories"
+          
+        contact_id:
+          type: string
+          nullable: true
+          description: |
+            The ID of the created contact document.
+            - **null** if no contact info was provided
+            - Contact contains email/phone information
+          example: "John Doe-John Doe"
+          
+        address_id:
+          type: string
+          nullable: true
+          description: |
+            The ID of the created address document.
+            - **null** if no address info was provided
+            - Address Type is set to "Billing"
+          example: "John Doe-Billing"
+          
+        message:
+          type: string
+          description: |
+            Human-readable status message.
+            - Success: "Customer created successfully"
+            - Duplicate: "Customer already exists with this name"
+            - Error: "Error creating customer: {details}"
+          example: "Customer created successfully"
+
+    Error:
+      type: object
+      properties:
+        exc_type:
+          type: string
+          description: Type of exception
+          example: "ValidationError"
+        exception:
+          type: string
+          description: Error message
+          example: "Customer name is required"
+        _server_messages:
+          type: string
+          description: Server error messages (JSON string)
+          nullable: true
+
+  responses:
+    UnauthorizedError:
+      description: |
+        Authentication required. You are not logged in.
+        
+        **Solutions:**
+        - Login via `/api/method/login` to get session cookie
+        - Provide API Key/Secret in Authorization header
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            exc_type: "AuthenticationError"
+            exception: "Not authenticated"
+            
+    ForbiddenError:
+      description: |
+        Permission denied. You don't have access to this resource.
+        
+        **Solutions:**
+        - Ensure your user has permission to create/read customers
+        - Contact administrator to grant permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            exc_type: "PermissionError"
+            exception: "You don't have permission to create Customer"
+            
+    ServerError:
+      description: Internal server error. Something went wrong on the server.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            exc_type: "InternalServerError"
+            exception: "An error occurred while processing your request"

@@ -244,3 +244,4 @@ required_apps = ["frappe", "erpnext"]
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
 
+

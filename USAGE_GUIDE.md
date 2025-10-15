@@ -2,7 +2,7 @@
 
 ## Overview
 
-This custom Frappe app adds API endpoints to check if a customer is registered in your ERPNext system.
+This custom Frappe app adds API endpoints to check if a customer is registered in your ERPNext system and to create new customers.
 
 ## Installation
 
@@ -99,6 +99,101 @@ curl -X GET "http://erpsite.com:8000/api/method/customer_api.api.check_customer_
 }
 ```
 
+### 3. Create Customer
+
+**Endpoint:** `/api/method/customer_api.api.create_customer`
+
+**Method:** POST
+
+**Authentication:** Required (API Key/Token or Session)
+
+**Parameters:**
+- `customer_name` (required): The customer name
+- `customer_type` (optional): "Individual" or "Company" (default: "Individual")
+- `customer_group` (optional): Customer group (defaults to system setting)
+- `territory` (optional): Territory (defaults to system setting)
+- `email` (optional): Customer email address
+- `mobile` (optional): Customer mobile number
+- `phone` (optional): Customer phone number
+- `address_line1` (optional): Address line 1
+- `address_line2` (optional): Address line 2
+- `city` (optional): City
+- `state` (optional): State/Province
+- `country` (optional): Country
+- `pincode` (optional): Postal/ZIP code
+
+**Example Request (cURL - Minimal):**
+```bash
+curl -X POST "http://erpsite.com:8000/api/method/customer_api.api.create_customer" \
+  -H "Authorization: token API_KEY:API_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_name": "Jane Smith"
+  }'
+```
+
+**Example Request (cURL - Complete):**
+```bash
+curl -X POST "http://erpsite.com:8000/api/method/customer_api.api.create_customer" \
+  -H "Authorization: token API_KEY:API_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_name": "Jane Smith",
+    "customer_type": "Individual",
+    "customer_group": "Commercial",
+    "territory": "United States",
+    "email": "jane.smith@example.com",
+    "mobile": "+1234567890",
+    "phone": "+1987654321",
+    "address_line1": "123 Main Street",
+    "address_line2": "Apt 4B",
+    "city": "New York",
+    "state": "NY",
+    "country": "United States",
+    "pincode": "10001"
+  }'
+```
+
+**Example Response (Success):**
+```json
+{
+  "message": {
+    "success": true,
+    "customer_id": "CUST-00002",
+    "customer_name": "Jane Smith",
+    "customer_type": "Individual",
+    "customer_group": "Commercial",
+    "territory": "United States",
+    "address_id": "ADDR-00001",
+    "message": "Customer created successfully"
+  }
+}
+```
+
+**Example Response (Already Exists):**
+```json
+{
+  "message": {
+    "success": false,
+    "customer_id": "CUST-00001",
+    "customer_name": "Jane Smith",
+    "message": "Customer already exists with this name"
+  }
+}
+```
+
+**Example Response (Error):**
+```json
+{
+  "message": {
+    "success": false,
+    "customer_id": null,
+    "customer_name": "Jane Smith",
+    "message": "Error creating customer: <error details>"
+  }
+}
+```
+
 ## Authentication Methods
 
 ### Method 1: Session-based Authentication (for web apps)
@@ -132,7 +227,9 @@ curl -X GET "http://erpsite.com:8000/api/method/customer_api.api.check_customer_
   -H "Authorization: token YOUR_API_KEY:YOUR_API_SECRET"
 ```
 
-## Python Example
+## Python Examples
+
+### Check Customer Registration
 
 ```python
 import requests
@@ -161,7 +258,51 @@ else:
     print("Customer not registered")
 ```
 
-## JavaScript Example
+### Create Customer
+
+```python
+import requests
+
+# Configuration
+base_url = "http://erpsite.com:8000"
+api_key = "your_api_key"
+api_secret = "your_api_secret"
+
+# Headers
+headers = {
+    "Authorization": f"token {api_key}:{api_secret}",
+    "Content-Type": "application/json"
+}
+
+# Create customer
+data = {
+    "customer_name": "Jane Smith",
+    "customer_type": "Individual",
+    "email": "jane.smith@example.com",
+    "mobile": "+1234567890",
+    "address_line1": "123 Main Street",
+    "city": "New York",
+    "state": "NY",
+    "country": "United States",
+    "pincode": "10001"
+}
+
+response = requests.post(
+    f"{base_url}/api/method/customer_api.api.create_customer",
+    json=data,
+    headers=headers
+)
+
+result = response.json()
+if result["message"]["success"]:
+    print(f"Customer created: {result['message']['customer_id']}")
+else:
+    print(f"Error: {result['message']['message']}")
+```
+
+## JavaScript Examples
+
+### Check Customer Registration
 
 ```javascript
 // Using Fetch API
@@ -189,6 +330,52 @@ checkCustomer("John Doe").then(result => {
         console.log(`Customer found: ${result.customer_id}`);
     } else {
         console.log("Customer not registered");
+    }
+});
+```
+
+### Create Customer
+
+```javascript
+// Using Fetch API
+const baseUrl = "http://erpsite.com:8000";
+const apiKey = "your_api_key";
+const apiSecret = "your_api_secret";
+
+async function createCustomer(customerData) {
+    const url = `${baseUrl}/api/method/customer_api.api.create_customer`;
+    
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Authorization': `token ${apiKey}:${apiSecret}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(customerData)
+    });
+    
+    const data = await response.json();
+    return data.message;
+}
+
+// Usage
+const newCustomer = {
+    customer_name: "Jane Smith",
+    customer_type: "Individual",
+    email: "jane.smith@example.com",
+    mobile: "+1234567890",
+    address_line1: "123 Main Street",
+    city: "New York",
+    state: "NY",
+    country: "United States",
+    pincode: "10001"
+};
+
+createCustomer(newCustomer).then(result => {
+    if (result.success) {
+        console.log(`Customer created: ${result.customer_id}`);
+    } else {
+        console.log(`Error: ${result.message}`);
     }
 });
 ```
@@ -234,7 +421,8 @@ Error response format:
 
 By default, the endpoints require authentication (`allow_guest=False`). Make sure the user making the API call has the following permissions:
 
-- Read access to the Customer doctype
+- **For check endpoints:** Read access to the Customer doctype
+- **For create endpoint:** Create and Write access to the Customer doctype (and Address doctype if creating addresses)
 
 You can modify the permissions in the `customer_api/api.py` file if needed.
 
@@ -268,4 +456,5 @@ For issues or questions, check the code in:
 - `/home/samudith/frappe-bench/apps/customer_api/customer_api/api.py`
 
 You can modify the API endpoints by editing this file and restarting your bench.
+
 

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Customer API Documentation - Standalone Swagger UI" />
+  <title>Customer API - Swagger Documentation</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    .swagger-ui .topbar {
+      background-color: #2c3e50;
+    }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js" crossorigin></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js" crossorigin></script>
+  <script src="https://unpkg.com/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  <script>
+    // Embedded OpenAPI Specification
+    const openApiYaml = `
+openapi: 3.0.3
+info:
+  title: Customer API for ERPNext
+  description: API endpoints for managing customers in ERPNext/Frappe
+  version: 1.0.0
+servers:
+  - url: http://erpsite.com:8000
+    description: Development server
+  - url: http://localhost:8000
+    description: Local server
+paths:
+  /api/method/customer_api.api.check_customer_registered:
+    get:
+      summary: Check customer by name
+      parameters:
+        - name: customer_name
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+  /api/method/customer_api.api.check_customer_by_id:
+    get:
+      summary: Check customer by ID
+      parameters:
+        - name: customer_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+  /api/method/customer_api.api.create_customer:
+    post:
+      summary: Create customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - customer_name
+              properties:
+                customer_name:
+                  type: string
+      responses:
+        '200':
+          description: Success
+    `;
+
+    window.onload = () => {
+      // Parse YAML
+      const spec = jsyaml.load(openApiYaml);
+      
+      window.ui = SwaggerUIBundle({
+        spec: spec,
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "StandaloneLayout",
+        persistAuthorization: true,
+        tryItOutEnabled: true
+      });
+    };
+  </script>
+</body>
+</html>
+
