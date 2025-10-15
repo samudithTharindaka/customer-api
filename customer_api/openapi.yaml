@@ -2,18 +2,21 @@ openapi: 3.0.3
 info:
   title: Customer API for ERPNext
   description: |
-    ## API for Customer Management in ERPNext
+    ## API for Customer Management and Sales in ERPNext
     
-    This API provides two main endpoints for customer management:
+    This API provides three main endpoints:
     1. **Check Customer Availability** - Verify if a customer exists by name
     2. **Create Customer** - Create new customers with full contact and address details
+    3. **Create Sales Invoice** - Create invoices with automatic inventory management
     
     ### Features
     - ✅ Check if customer is already registered
     - ✅ Create customers with contact information (email, mobile, phone)
     - ✅ Create customers with address details
+    - ✅ Create sales invoices with automatic stock deduction
     - ✅ Automatic contact and address linking
     - ✅ Duplicate customer detection
+    - ✅ Automatic inventory and accounting management
     - ✅ Support for Individual and Company customer types
     
     ### Authentication
@@ -48,6 +51,8 @@ tags:
     description: Check if customers exist in the system
   - name: Customer Creation
     description: Create new customers with contact and address information
+  - name: Sales Invoice
+    description: Create sales invoices with automatic inventory management
 
 security:
   - sessionAuth: []
@@ -314,6 +319,203 @@ paths:
                       customer_id: null
                       customer_name: "Test Customer"
                       message: "Error creating customer: Customer type must be 'Individual' or 'Company'"
+                      
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/method/customer_api.api.create_sales_invoice:
+    post:
+      tags:
+        - Sales Invoice
+      summary: Create a new sales invoice
+      description: |
+        Creates a new sales invoice in ERPNext with **automatic inventory management**.
+        
+        ### Inventory Management - Automatic!
+        
+        When `update_stock=1` (default), ERPNext automatically:
+        - ✅ **Deducts stock** from specified warehouses
+        - ✅ **Creates stock ledger entries** for audit trail
+        - ✅ **Updates item valuation** (FIFO/Moving Average)
+        - ✅ **Posts accounting entries** automatically:
+          - Debit: Accounts Receivable
+          - Credit: Sales Revenue
+          - Debit: Cost of Goods Sold (COGS)
+          - Credit: Stock Asset
+        - ✅ **Real-time inventory updates** across all reports
+        
+        ### What Gets Created
+        
+        1. **Sales Invoice Document**
+           - Invoice number auto-generated
+           - Customer billing details
+           - Line items with prices
+           - Tax calculations
+           - Payment terms
+        
+        2. **Stock Ledger Entries** (if update_stock=1)
+           - Stock quantities reduced
+           - Warehouse-wise tracking
+           - Serial/Batch numbers handled
+        
+        3. **Accounting Entries** (when submitted)
+           - General Ledger entries
+           - Accounts Receivable tracking
+           - COGS calculation
+        
+        ### Features
+        - ✅ Multiple items per invoice
+        - ✅ Automatic tax calculation
+        - ✅ Discount support (item-level)
+        - ✅ Payment terms templates
+        - ✅ Cost center tracking
+        - ✅ Project linking
+        - ✅ Draft or auto-submit
+        - ✅ Complete validation
+        
+      operationId: createSalesInvoice
+      
+      requestBody:
+        required: true
+        description: Sales invoice data with items and optional settings
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSalesInvoiceRequest'
+            examples:
+              simple:
+                summary: Simple Invoice
+                description: Basic invoice with one item (stock auto-updated)
+                value:
+                  customer: "John Doe"
+                  items:
+                    - item_code: "ITEM-001"
+                      qty: 5
+                      rate: 100
+                      
+              multipleItems:
+                summary: Multiple Items
+                description: Invoice with multiple items from specific warehouse
+                value:
+                  customer: "Jane Smith"
+                  posting_date: "2025-10-15"
+                  due_date: "2025-11-15"
+                  items:
+                    - item_code: "LAPTOP-HP"
+                      qty: 2
+                      rate: 800
+                      warehouse: "Stores - C"
+                    - item_code: "MOUSE-WIRELESS"
+                      qty: 2
+                      rate: 25
+                      warehouse: "Stores - C"
+                  update_stock: 1
+                  
+              withTaxes:
+                summary: With Taxes and Auto-Submit
+                description: Complete invoice with taxes, auto-submitted
+                value:
+                  customer: "ACME Corporation"
+                  posting_date: "2025-10-15"
+                  due_date: "2025-10-30"
+                  items:
+                    - item_code: "WIDGET-A"
+                      qty: 100
+                      rate: 50
+                      warehouse: "Finished Goods - C"
+                      discount_percentage: 5
+                  taxes_and_charges: "Sales Taxes - C"
+                  payment_terms_template: "Net 30"
+                  update_stock: 1
+                  submit: 1
+                  
+              serviceItem:
+                summary: Service Invoice (No Stock)
+                description: Service invoice without stock update
+                value:
+                  customer: "Consulting Client"
+                  items:
+                    - item_code: "SERVICE-CONSULTING"
+                      qty: 40
+                      rate: 150
+                      uom: "Hour"
+                  update_stock: 0
+                  submit: 1
+                  
+      responses:
+        '200':
+          description: Sales invoice creation response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    $ref: '#/components/schemas/CreateSalesInvoiceResponse'
+              examples:
+                success:
+                  summary: Success - Invoice Created
+                  description: Invoice created successfully with stock updated
+                  value:
+                    message:
+                      success: true
+                      invoice_id: "SINV-2025-00123"
+                      invoice_name: "SINV-2025-00123"
+                      customer: "John Doe"
+                      posting_date: "2025-10-15"
+                      due_date: "2025-10-15"
+                      total_qty: 5
+                      total: 500
+                      grand_total: 500
+                      outstanding_amount: 500
+                      status: "Draft"
+                      update_stock: 1
+                      message: "Sales invoice created successfully"
+                      
+                successSubmitted:
+                  summary: Success - Auto-Submitted
+                  description: Invoice created and submitted automatically
+                  value:
+                    message:
+                      success: true
+                      invoice_id: "SINV-2025-00124"
+                      invoice_name: "SINV-2025-00124"
+                      customer: "ACME Corporation"
+                      posting_date: "2025-10-15"
+                      due_date: "2025-10-30"
+                      total_qty: 100
+                      total: 4750
+                      grand_total: 5700
+                      outstanding_amount: 5700
+                      status: "Submitted"
+                      update_stock: 1
+                      message: "Sales invoice created and submitted successfully"
+                      
+                customerNotFound:
+                  summary: Error - Customer Not Found
+                  description: Customer doesn't exist in system
+                  value:
+                    message:
+                      success: false
+                      invoice_id: null
+                      invoice_name: null
+                      grand_total: 0
+                      message: "Customer 'Unknown Customer' does not exist"
+                      
+                itemNotFound:
+                  summary: Error - Item Not Found
+                  description: One or more items don't exist
+                  value:
+                    message:
+                      success: false
+                      invoice_id: null
+                      invoice_name: null
+                      grand_total: 0
+                      message: "Item 'INVALID-ITEM' does not exist"
                       
         '401':
           $ref: '#/components/responses/UnauthorizedError'
@@ -615,6 +817,235 @@ components:
             - Duplicate: "Customer already exists with this name"
             - Error: "Error creating customer: {details}"
           example: "Customer created successfully"
+
+    CreateSalesInvoiceRequest:
+      type: object
+      required:
+        - customer
+        - items
+      properties:
+        customer:
+          type: string
+          description: |
+            **REQUIRED**. Customer ID or name.
+            Customer must exist in the system.
+          example: "John Doe"
+          
+        items:
+          type: array
+          description: |
+            **REQUIRED**. Array of items to include in the invoice.
+            Each item must have at minimum: item_code and qty.
+          minItems: 1
+          items:
+            type: object
+            required:
+              - item_code
+              - qty
+            properties:
+              item_code:
+                type: string
+                description: Item code (must exist in system)
+                example: "ITEM-001"
+              qty:
+                type: number
+                description: Quantity to invoice
+                example: 10
+              rate:
+                type: number
+                description: Price per unit (optional, uses item price if not provided)
+                example: 100
+              warehouse:
+                type: string
+                description: Warehouse to deduct stock from (required if update_stock=1)
+                example: "Stores - C"
+              description:
+                type: string
+                description: Item description (optional, overrides default)
+              uom:
+                type: string
+                description: Unit of measure
+                example: "Nos"
+              discount_percentage:
+                type: number
+                description: Discount percentage for this item
+                example: 10
+              cost_center:
+                type: string
+                description: Cost center for this item
+                
+        posting_date:
+          type: string
+          format: date
+          description: Invoice date (YYYY-MM-DD). Defaults to today.
+          example: "2025-10-15"
+          
+        due_date:
+          type: string
+          format: date
+          description: Payment due date (YYYY-MM-DD). Defaults to posting_date.
+          example: "2025-11-15"
+          
+        update_stock:
+          type: integer
+          description: |
+            Update inventory automatically.
+            - **1**: YES - Deduct stock from warehouses (default)
+            - **0**: NO - Create invoice without affecting stock
+          enum:
+            - 0
+            - 1
+          default: 1
+          example: 1
+          
+        submit:
+          type: integer
+          description: |
+            Submit invoice after creation.
+            - **0**: Save as draft (default)
+            - **1**: Auto-submit invoice
+          enum:
+            - 0
+            - 1
+          default: 0
+          example: 0
+          
+        company:
+          type: string
+          description: Company name (uses default if not provided)
+          example: "My Company"
+          
+        currency:
+          type: string
+          description: Currency code (uses customer's default if not provided)
+          example: "USD"
+          
+        taxes_and_charges:
+          type: string
+          description: Sales Taxes and Charges Template name
+          example: "Sales Taxes - C"
+          
+        payment_terms_template:
+          type: string
+          description: Payment Terms Template name
+          example: "Net 30"
+          
+        cost_center:
+          type: string
+          description: Default cost center for the invoice
+          example: "Main - C"
+          
+        project:
+          type: string
+          description: Project name to link invoice to
+          example: "Project Alpha"
+
+    CreateSalesInvoiceResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          description: |
+            **true**: Invoice created successfully
+            **false**: Invoice creation failed
+          example: true
+          
+        invoice_id:
+          type: string
+          nullable: true
+          description: |
+            The ID/name of the created invoice.
+            **null** if creation failed.
+          example: "SINV-2025-00123"
+          
+        invoice_name:
+          type: string
+          nullable: true
+          description: The invoice number (same as invoice_id)
+          example: "SINV-2025-00123"
+          
+        customer:
+          type: string
+          description: Customer name from the invoice
+          example: "John Doe"
+          
+        posting_date:
+          type: string
+          format: date
+          description: Invoice date
+          example: "2025-10-15"
+          
+        due_date:
+          type: string
+          format: date
+          description: Payment due date
+          example: "2025-11-15"
+          
+        total_qty:
+          type: number
+          description: Total quantity of all items
+          example: 150
+          
+        total:
+          type: number
+          description: Total amount before taxes
+          example: 8500
+          
+        grand_total:
+          type: number
+          description: |
+            Final invoice amount (including taxes and discounts).
+            This is the amount customer needs to pay.
+          example: 10200
+          
+        outstanding_amount:
+          type: number
+          description: |
+            Amount still unpaid.
+            Equals grand_total for new invoices.
+          example: 10200
+          
+        status:
+          type: string
+          description: |
+            Invoice status:
+            - **Draft**: Not submitted yet
+            - **Submitted**: Submitted and locked
+            - **Paid**: Fully paid
+            - **Unpaid**: Submitted but not paid
+          enum:
+            - Draft
+            - Submitted
+            - Paid
+            - Unpaid
+            - Overdue
+            - Return
+            - Cancelled
+          example: "Draft"
+          
+        update_stock:
+          type: integer
+          description: Whether stock was updated (1=Yes, 0=No)
+          example: 1
+          
+        message:
+          type: string
+          description: |
+            Human-readable status message.
+            - Success: "Sales invoice created successfully"
+            - Error: "Error creating sales invoice: {details}"
+          example: "Sales invoice created successfully"
+          
+        submit_error:
+          type: string
+          nullable: true
+          description: |
+            Error message if submit=1 but submission failed.
+            Invoice will be created as draft in this case.
+          example: null
 
     Error:
       type: object

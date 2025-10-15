@@ -1,0 +1,510 @@
+{
+	"info": {
+		"name": "Customer API for ERPNext",
+		"description": "Complete API collection for Customer Management and Sales in ERPNext.\n\n**Features:**\n- Check customer availability\n- Create customers with contact and address\n- Create sales invoices with automatic inventory management\n\n**Authentication:**\nSet your API credentials in the collection variables:\n- `api_key`: Your API Key\n- `api_secret`: Your API Secret\n\nOr use session-based authentication after logging in.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "customer-api-v1"
+	},
+	"item": [
+		{
+			"name": "Customer Availability",
+			"item": [
+				{
+					"name": "Check Customer - Exists",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/method/customer_api.api.check_customer_registered?customer_name=Test Customer API",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "customer_api.api.check_customer_registered"],
+							"query": [
+								{
+									"key": "customer_name",
+									"value": "Test Customer API",
+									"description": "Name of the customer to check"
+								}
+							]
+						},
+						"description": "Check if a customer exists in the system. Returns customer details if found."
+					},
+					"response": [
+						{
+							"name": "Customer Found",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/method/customer_api.api.check_customer_registered?customer_name=John Doe",
+									"host": ["{{base_url}}"],
+									"path": ["api", "method", "customer_api.api.check_customer_registered"],
+									"query": [
+										{
+											"key": "customer_name",
+											"value": "John Doe"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n  \"message\": {\n    \"customer_name\": \"John Doe\",\n    \"is_registered\": true,\n    \"customer_id\": \"John Doe\",\n    \"customer_group\": \"Individual\",\n    \"territory\": \"All Territories\",\n    \"customer_type\": \"Individual\",\n    \"disabled\": 0\n  }\n}"
+						},
+						{
+							"name": "Customer Not Found",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/method/customer_api.api.check_customer_registered?customer_name=Unknown Customer",
+									"host": ["{{base_url}}"],
+									"path": ["api", "method", "customer_api.api.check_customer_registered"],
+									"query": [
+										{
+											"key": "customer_name",
+											"value": "Unknown Customer"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n  \"message\": {\n    \"customer_name\": \"Unknown Customer\",\n    \"is_registered\": false,\n    \"customer_id\": null,\n    \"customer_group\": null,\n    \"territory\": null,\n    \"customer_type\": null,\n    \"disabled\": null\n  }\n}"
+						}
+					]
+				}
+			],
+			"description": "Check if customers exist in the system by their name."
+		},
+		{
+			"name": "Customer Creation",
+			"item": [
+				{
+					"name": "Create Customer - Minimal",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer_name\": \"Postman Test Customer\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/customer_api.api.create_customer",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "customer_api.api.create_customer"]
+						},
+						"description": "Create a customer with just a name. No contact or address information."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Customer - With Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer_name\": \"Emma Wilson\",\n  \"email\": \"emma.wilson@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/customer_api.api.create_customer",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "customer_api.api.create_customer"]
+						},
+						"description": "Create a customer with email. A contact will be created and linked."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Customer - With Contact Info",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer_name\": \"David Brown\",\n  \"customer_type\": \"Individual\",\n  \"email\": \"david.brown@example.com\",\n  \"mobile\": \"+1-555-1234\",\n  \"phone\": \"+1-555-5678\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/customer_api.api.create_customer",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "customer_api.api.create_customer"]
+						},
+						"description": "Create a customer with full contact information (email, mobile, phone)."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Customer - Complete",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer_name\": \"Alice Williams\",\n  \"customer_type\": \"Individual\",\n  \"customer_group\": \"Commercial\",\n  \"territory\": \"Rest Of The World\",\n  \"email\": \"alice.williams@example.com\",\n  \"mobile\": \"+1-555-9999\",\n  \"address_line1\": \"123 Main Street\",\n  \"address_line2\": \"Suite 100\",\n  \"city\": \"New York\",\n  \"state\": \"NY\",\n  \"country\": \"United States\",\n  \"pincode\": \"10001\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/customer_api.api.create_customer",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "customer_api.api.create_customer"]
+						},
+						"description": "Create a complete customer with contact and address information."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Customer - Company Type",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer_name\": \"TechCorp Solutions Ltd\",\n  \"customer_type\": \"Company\",\n  \"customer_group\": \"Commercial\",\n  \"email\": \"info@techcorp.com\",\n  \"mobile\": \"+1-555-0000\",\n  \"address_line1\": \"456 Corporate Drive\",\n  \"city\": \"San Francisco\",\n  \"state\": \"California\",\n  \"country\": \"United States\",\n  \"pincode\": \"94102\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/customer_api.api.create_customer",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "customer_api.api.create_customer"]
+						},
+						"description": "Create a Company type customer with full details."
+					},
+					"response": []
+				}
+			],
+			"description": "Create new customers with optional contact and address information."
+		},
+		{
+			"name": "Sales Invoice",
+			"item": [
+				{
+					"name": "Create Invoice - Simple",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer\": \"Test Customer API\",\n  \"items\": [\n    {\n      \"item_code\": \"ITEM-001\",\n      \"qty\": 5,\n      \"rate\": 100\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/customer_api.api.create_sales_invoice",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "customer_api.api.create_sales_invoice"]
+						},
+						"description": "Create a simple sales invoice with one item. Stock will be automatically deducted (update_stock=1 by default).\n\n**What happens:**\n- Invoice created\n- Stock deducted from warehouse\n- Saved as draft (submit=0 by default)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Invoice - Multiple Items",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer\": \"Production Test Customer\",\n  \"posting_date\": \"2025-10-15\",\n  \"due_date\": \"2025-11-15\",\n  \"items\": [\n    {\n      \"item_code\": \"LAPTOP-HP\",\n      \"qty\": 2,\n      \"rate\": 800,\n      \"warehouse\": \"Stores - C\"\n    },\n    {\n      \"item_code\": \"MOUSE-WIRELESS\",\n      \"qty\": 2,\n      \"rate\": 25,\n      \"warehouse\": \"Stores - C\"\n    }\n  ],\n  \"update_stock\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/customer_api.api.create_sales_invoice",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "customer_api.api.create_sales_invoice"]
+						},
+						"description": "Create an invoice with multiple items from a specific warehouse.\n\n**Stock Management:**\n- 2 Laptops deducted from Stores - C\n- 2 Mice deducted from Stores - C\n- Stock ledger entries created\n- Inventory updated in real-time"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Invoice - With Taxes & Auto-Submit",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer\": \"ACME Corporation\",\n  \"posting_date\": \"2025-10-15\",\n  \"due_date\": \"2025-10-30\",\n  \"items\": [\n    {\n      \"item_code\": \"WIDGET-A\",\n      \"qty\": 100,\n      \"rate\": 50,\n      \"warehouse\": \"Finished Goods - C\",\n      \"discount_percentage\": 5\n    }\n  ],\n  \"taxes_and_charges\": \"Sales Taxes - C\",\n  \"payment_terms_template\": \"Net 30\",\n  \"update_stock\": 1,\n  \"submit\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/customer_api.api.create_sales_invoice",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "customer_api.api.create_sales_invoice"]
+						},
+						"description": "Create a complete invoice with:\n- Taxes applied automatically\n- 5% discount on items\n- Payment terms (Net 30)\n- Auto-submitted (locked)\n- Stock automatically deducted\n\n**Accounting:**\n- DR: Accounts Receivable\n- CR: Sales Revenue\n- DR: COGS\n- CR: Stock Asset"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Invoice - Service (No Stock)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer\": \"Consulting Client\",\n  \"items\": [\n    {\n      \"item_code\": \"SERVICE-CONSULTING\",\n      \"qty\": 40,\n      \"rate\": 150,\n      \"uom\": \"Hour\"\n    }\n  ],\n  \"update_stock\": 0,\n  \"submit\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/customer_api.api.create_sales_invoice",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "customer_api.api.create_sales_invoice"]
+						},
+						"description": "Create a service invoice without stock update.\n\n**Features:**\n- Service item (no inventory)\n- Billed by hours\n- Auto-submitted\n- No stock deduction (update_stock=0)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Invoice - Complete Example",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer\": \"{{customer_name}}\",\n  \"posting_date\": \"{{posting_date}}\",\n  \"due_date\": \"{{due_date}}\",\n  \"company\": \"{{company_name}}\",\n  \"items\": [\n    {\n      \"item_code\": \"{{item_code_1}}\",\n      \"qty\": 10,\n      \"rate\": 100,\n      \"warehouse\": \"{{warehouse}}\",\n      \"discount_percentage\": 0\n    },\n    {\n      \"item_code\": \"{{item_code_2}}\",\n      \"qty\": 5,\n      \"rate\": 200,\n      \"warehouse\": \"{{warehouse}}\"\n    }\n  ],\n  \"taxes_and_charges\": \"{{tax_template}}\",\n  \"payment_terms_template\": \"{{payment_terms}}\",\n  \"cost_center\": \"{{cost_center}}\",\n  \"project\": \"{{project_name}}\",\n  \"update_stock\": 1,\n  \"submit\": 0\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/customer_api.api.create_sales_invoice",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "customer_api.api.create_sales_invoice"]
+						},
+						"description": "Complete invoice template using collection variables.\n\nUpdate the variables in Collection settings to customize:\n- customer_name\n- item_code_1, item_code_2\n- warehouse\n- tax_template\n- etc."
+					},
+					"response": []
+				}
+			],
+			"description": "Create sales invoices with automatic inventory management. Stock is automatically deducted when update_stock=1."
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "usr",
+									"value": "Administrator",
+									"description": "Username"
+								},
+								{
+									"key": "pwd",
+									"value": "your_password",
+									"description": "Password"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "login"]
+						},
+						"description": "Login to get session cookie. After successful login, the session cookie will be used for subsequent requests.\n\n**Usage:**\n1. Update the password\n2. Send this request\n3. Session cookie is automatically saved\n4. Use other endpoints without API key"
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoints for session-based auth. Alternatively, use API Key/Secret in Authorization header."
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "value",
+				"value": "token {{api_key}}:{{api_secret}}",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "Authorization",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-set posting_date to today if not set",
+					"if (!pm.variables.get('posting_date')) {",
+					"    const today = new Date().toISOString().split('T')[0];",
+					"    pm.variables.set('posting_date', today);",
+					"}",
+					"",
+					"// Auto-set due_date to 30 days from now if not set",
+					"if (!pm.variables.get('due_date')) {",
+					"    const dueDate = new Date();",
+					"    dueDate.setDate(dueDate.getDate() + 30);",
+					"    pm.variables.set('due_date', dueDate.toISOString().split('T')[0]);",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-save successful responses for later use",
+					"if (pm.response.code === 200) {",
+					"    const response = pm.response.json();",
+					"    ",
+					"    // Save customer_id from create customer response",
+					"    if (response.message && response.message.customer_id) {",
+					"        pm.collectionVariables.set('last_customer_id', response.message.customer_id);",
+					"    }",
+					"    ",
+					"    // Save invoice_id from create invoice response",
+					"    if (response.message && response.message.invoice_id) {",
+					"        pm.collectionVariables.set('last_invoice_id', response.message.invoice_id);",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://erpsite.com:8000",
+			"type": "string"
+		},
+		{
+			"key": "api_key",
+			"value": "your_api_key_here",
+			"type": "string"
+		},
+		{
+			"key": "api_secret",
+			"value": "your_api_secret_here",
+			"type": "string"
+		},
+		{
+			"key": "customer_name",
+			"value": "Test Customer API",
+			"type": "string"
+		},
+		{
+			"key": "item_code_1",
+			"value": "ITEM-001",
+			"type": "string"
+		},
+		{
+			"key": "item_code_2",
+			"value": "ITEM-002",
+			"type": "string"
+		},
+		{
+			"key": "warehouse",
+			"value": "Stores - C",
+			"type": "string"
+		},
+		{
+			"key": "company_name",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tax_template",
+			"value": "Sales Taxes - C",
+			"type": "string"
+		},
+		{
+			"key": "payment_terms",
+			"value": "Net 30",
+			"type": "string"
+		},
+		{
+			"key": "cost_center",
+			"value": "Main - C",
+			"type": "string"
+		},
+		{
+			"key": "project_name",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "posting_date",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "due_date",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "last_customer_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "last_invoice_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+

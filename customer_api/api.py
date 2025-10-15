@@ -242,3 +242,217 @@ def create_customer(customer_name, customer_type="Individual", customer_group=No
 			"message": _("Error creating customer: {0}").format(str(e))
 		}
 
+
+@frappe.whitelist(allow_guest=False)
+def create_sales_invoice(customer, items, due_date=None, posting_date=None, update_stock=1, 
+						set_posting_time=0, company=None, currency=None, taxes_and_charges=None,
+						payment_terms_template=None, submit=0, cost_center=None, project=None):
+	"""
+	Create a new sales invoice in the system.
+	
+	Args:
+		customer (str): Customer ID or name (required)
+		items (list): List of items with item_code, qty, rate, etc. (required)
+		due_date (str): Payment due date (optional, defaults to posting_date)
+		posting_date (str): Invoice date (optional, defaults to today)
+		update_stock (int): Update stock on save (1=Yes, 0=No, default=1)
+		set_posting_time (int): Set custom posting time (0 or 1, default=0)
+		company (str): Company name (optional, uses default)
+		currency (str): Currency (optional, uses customer's default)
+		taxes_and_charges (str): Sales Taxes and Charges Template name (optional)
+		payment_terms_template (str): Payment Terms Template (optional)
+		submit (int): Submit invoice after creation (1=Yes, 0=No, default=0)
+		cost_center (str): Default Cost Center (optional)
+		project (str): Project name (optional)
+		
+	Returns:
+		dict: Dictionary containing created sales invoice details
+			- success: Boolean indicating success
+			- invoice_id: The created invoice ID
+			- invoice_name: The invoice name/number
+			- grand_total: Total invoice amount
+			- message: Success or error message
+			
+	Example items format:
+		[
+			{
+				"item_code": "ITEM-001",
+				"qty": 10,
+				"rate": 100,
+				"warehouse": "Stores - C" (optional)
+			},
+			{
+				"item_code": "ITEM-002",
+				"qty": 5,
+				"rate": 200
+			}
+		]
+	"""
+	
+	try:
+		# Validate required fields
+		if not customer:
+			frappe.throw(_("Customer is required"))
+		
+		if not items or not isinstance(items, list) or len(items) == 0:
+			frappe.throw(_("At least one item is required"))
+		
+		# Parse items if it's a JSON string
+		if isinstance(items, str):
+			import json
+			items = json.loads(items)
+		
+		# Verify customer exists
+		if not frappe.db.exists("Customer", customer):
+			return {
+				"success": False,
+				"invoice_id": None,
+				"invoice_name": None,
+				"grand_total": 0,
+				"message": _("Customer '{0}' does not exist").format(customer)
+			}
+		
+		# Get default company if not provided
+		if not company:
+			company = frappe.db.get_single_value("Global Defaults", "default_company")
+			if not company:
+				company = frappe.get_all("Company", limit=1, pluck="name")[0]
+		
+		# Set posting date to today if not provided
+		if not posting_date:
+			posting_date = frappe.utils.nowdate()
+		
+		# Set due date to posting date if not provided
+		if not due_date:
+			due_date = posting_date
+		
+		# Create sales invoice document
+		invoice_doc = frappe.get_doc({
+			"doctype": "Sales Invoice",
+			"customer": customer,
+			"posting_date": posting_date,
+			"due_date": due_date,
+			"company": company,
+			"update_stock": int(update_stock),
+			"set_posting_time": int(set_posting_time)
+		})
+		
+		# Set optional fields
+		if currency:
+			invoice_doc.currency = currency
+		
+		if cost_center:
+			invoice_doc.cost_center = cost_center
+		
+		if project:
+			invoice_doc.project = project
+		
+		if payment_terms_template:
+			invoice_doc.payment_terms_template = payment_terms_template
+		
+		if taxes_and_charges:
+			invoice_doc.taxes_and_charges = taxes_and_charges
+		
+		# Add items
+		for item in items:
+			if not item.get("item_code"):
+				frappe.throw(_("Item code is required for all items"))
+			
+			if not item.get("qty"):
+				frappe.throw(_("Quantity is required for item {0}").format(item.get("item_code")))
+			
+			# Verify item exists
+			if not frappe.db.exists("Item", item.get("item_code")):
+				frappe.throw(_("Item '{0}' does not exist").format(item.get("item_code")))
+			
+			item_row = {
+				"item_code": item.get("item_code"),
+				"qty": float(item.get("qty")),
+			}
+			
+			# Add optional item fields
+			if item.get("rate"):
+				item_row["rate"] = float(item.get("rate"))
+			
+			if item.get("warehouse"):
+				item_row["warehouse"] = item.get("warehouse")
+			
+			if item.get("description"):
+				item_row["description"] = item.get("description")
+			
+			if item.get("uom"):
+				item_row["uom"] = item.get("uom")
+			
+			if item.get("conversion_factor"):
+				item_row["conversion_factor"] = float(item.get("conversion_factor"))
+			
+			if item.get("discount_percentage"):
+				item_row["discount_percentage"] = float(item.get("discount_percentage"))
+			
+			if item.get("cost_center"):
+				item_row["cost_center"] = item.get("cost_center")
+			
+			invoice_doc.append("items", item_row)
+		
+		# Insert the invoice
+		invoice_doc.insert(ignore_permissions=False)
+		
+		# Get taxes if template is provided
+		if taxes_and_charges:
+			invoice_doc.set_missing_values()
+		
+		# Calculate totals
+		invoice_doc.calculate_taxes_and_totals()
+		invoice_doc.save()
+		frappe.db.commit()
+		
+		result = {
+			"success": True,
+			"invoice_id": invoice_doc.name,
+			"invoice_name": invoice_doc.name,
+			"customer": invoice_doc.customer,
+			"posting_date": str(invoice_doc.posting_date),
+			"due_date": str(invoice_doc.due_date),
+			"total_qty": invoice_doc.total_qty,
+			"total": invoice_doc.total,
+			"grand_total": invoice_doc.grand_total,
+			"outstanding_amount": invoice_doc.outstanding_amount,
+			"status": invoice_doc.status,
+			"update_stock": invoice_doc.update_stock,
+			"message": _("Sales invoice created successfully")
+		}
+		
+		# Submit if requested
+		if int(submit) == 1:
+			try:
+				invoice_doc.submit()
+				frappe.db.commit()
+				result["status"] = "Submitted"
+				result["message"] = _("Sales invoice created and submitted successfully")
+			except Exception as e:
+				# If submit fails, return draft invoice info with error
+				result["message"] = _("Invoice created as draft. Submit failed: {0}").format(str(e))
+				result["submit_error"] = str(e)
+		
+		return result
+		
+	except frappe.exceptions.ValidationError as e:
+		frappe.db.rollback()
+		return {
+			"success": False,
+			"invoice_id": None,
+			"invoice_name": None,
+			"grand_total": 0,
+			"message": _("Validation error: {0}").format(str(e))
+		}
+	except Exception as e:
+		frappe.db.rollback()
+		frappe.log_error(frappe.get_traceback(), _("Sales Invoice Creation Error"))
+		return {
+			"success": False,
+			"invoice_id": None,
+			"invoice_name": None,
+			"grand_total": 0,
+			"message": _("Error creating sales invoice: {0}").format(str(e))
+		}
+
