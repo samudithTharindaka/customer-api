@@ -1,0 +1,2 @@
+# Add patches here if needed
+# Example: customer_api.patches.v1_0.patch_name
