@@ -121,3 +121,4 @@ cookies.txt
 # Build artifacts
 *.pyc
 *.pyo
+__pycache__/
