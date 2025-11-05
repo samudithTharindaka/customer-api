@@ -246,7 +246,8 @@ def create_customer(customer_name, customer_type="Individual", customer_group=No
 @frappe.whitelist(allow_guest=False)
 def create_sales_invoice(customer, items, due_date=None, posting_date=None, update_stock=1, 
 						set_posting_time=0, company=None, currency=None, taxes_and_charges=None,
-						payment_terms_template=None, submit=0, cost_center=None, project=None):
+						payment_terms_template=None, submit=0, cost_center=None, project=None,
+						pos_profile=None):
 	"""
 	Create a new sales invoice in the system.
 	
@@ -264,6 +265,7 @@ def create_sales_invoice(customer, items, due_date=None, posting_date=None, upda
 		submit (int): Submit invoice after creation (1=Yes, 0=No, default=0)
 		cost_center (str): Default Cost Center (optional)
 		project (str): Project name (optional)
+		pos_profile (str): POS Profile name (optional, enables POS mode)
 		
 	Returns:
 		dict: Dictionary containing created sales invoice details
@@ -336,6 +338,20 @@ def create_sales_invoice(customer, items, due_date=None, posting_date=None, upda
 			"update_stock": int(update_stock),
 			"set_posting_time": int(set_posting_time)
 		})
+		
+		# Set POS Profile if provided (enables POS mode)
+		if pos_profile:
+			# Verify POS Profile exists
+			if not frappe.db.exists("POS Profile", pos_profile):
+				return {
+					"success": False,
+					"invoice_id": None,
+					"invoice_name": None,
+					"grand_total": 0,
+					"message": _("POS Profile '{0}' does not exist").format(pos_profile)
+				}
+			invoice_doc.is_pos = 1
+			invoice_doc.pos_profile = pos_profile
 		
 		# Set optional fields
 		if currency:
@@ -419,6 +435,8 @@ def create_sales_invoice(customer, items, due_date=None, posting_date=None, upda
 			"outstanding_amount": invoice_doc.outstanding_amount,
 			"status": invoice_doc.status,
 			"update_stock": invoice_doc.update_stock,
+			"is_pos": invoice_doc.is_pos,
+			"pos_profile": invoice_doc.pos_profile if pos_profile else None,
 			"message": _("Sales invoice created successfully")
 		}
 		
