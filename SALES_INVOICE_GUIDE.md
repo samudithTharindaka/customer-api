@@ -57,6 +57,7 @@ ERPNext automatically handles:
 | `due_date` | string | posting_date | Payment due date (YYYY-MM-DD) |
 | `update_stock` | integer | 1 | Update inventory (1=Yes, 0=No) |
 | `submit` | integer | 0 | Submit invoice (1=Yes, 0=No draft) |
+| `pos_profile` | string | None | POS Profile name (enables POS mode) |
 | `company` | string | Default | Company name |
 | `currency` | string | Customer's | Currency code |
 | `taxes_and_charges` | string | None | Sales Taxes Template name |
@@ -231,6 +232,66 @@ curl -X POST "http://erpsite.com:8000/api/method/customer_api.api.create_sales_i
 
 ---
 
+### **Example 5: POS Invoice (NEW!)**
+
+```bash
+curl -X POST "http://erpsite.com:8000/api/method/customer_api.api.create_sales_invoice" \
+  -H "Authorization: token YOUR_API_KEY:YOUR_API_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer": "Walk-in Customer",
+    "pos_profile": "Main POS",
+    "items": [
+      {
+        "item_code": "ITEM-001",
+        "qty": 2,
+        "rate": 50
+      },
+      {
+        "item_code": "ITEM-002",
+        "qty": 1,
+        "rate": 100
+      }
+    ],
+    "update_stock": 1,
+    "submit": 1
+  }'
+```
+
+**Features:**
+- **POS Mode Enabled** - `is_pos = 1`
+- POS Profile linked to invoice
+- Immediate submission for quick checkout
+- Stock automatically deducted
+- Perfect for retail/point-of-sale scenarios
+
+**Response:**
+```json
+{
+  "message": {
+    "success": true,
+    "invoice_id": "SINV-2025-00456",
+    "invoice_name": "SINV-2025-00456",
+    "customer": "Walk-in Customer",
+    "grand_total": 200.0,
+    "status": "Submitted",
+    "is_pos": 1,
+    "pos_profile": "Main POS",
+    "update_stock": 1,
+    "message": "Sales invoice created and submitted successfully"
+  }
+}
+```
+
+**POS Profile Benefits:**
+- Pre-configured taxes and charges
+- Default payment methods
+- Warehouse settings
+- Print format customization
+- Faster checkout process
+
+---
+
 ## 📊 **Response Format**
 
 ### **Success Response:**
@@ -250,6 +311,8 @@ curl -X POST "http://erpsite.com:8000/api/method/customer_api.api.create_sales_i
     "outstanding_amount": 10215.0,
     "status": "Submitted",
     "update_stock": 1,
+    "is_pos": 0,
+    "pos_profile": null,
     "message": "Sales invoice created and submitted successfully"
   }
 }
@@ -395,6 +458,7 @@ create_sales_invoice(
 # Walk-in customer purchase
 create_sales_invoice(
     customer=customer_id,
+    pos_profile="Main POS",  # Enable POS mode
     items=scanned_items,
     update_stock=1,
     submit=1,

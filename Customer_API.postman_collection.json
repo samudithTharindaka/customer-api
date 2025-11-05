@@ -1,7 +1,7 @@
 {
 	"info": {
 		"name": "Customer API for ERPNext",
-		"description": "Complete API collection for Customer Management and Sales in ERPNext.\n\n**Features:**\n- Check customer availability\n- Create customers with contact and address\n- Create sales invoices with automatic inventory management\n\n**Authentication:**\nSet your API credentials in the collection variables:\n- `api_key`: Your API Key\n- `api_secret`: Your API Secret\n\nOr use session-based authentication after logging in.",
+		"description": "Complete API collection for Customer Management and Sales in ERPNext.\n\n**Features:**\n- Check customer availability\n- Create customers with contact and address\n- Create sales invoices with automatic inventory management\n- POS invoice support with POS Profile integration\n\n**Authentication:**\nSet your API credentials in the collection variables:\n- `api_key`: Your API Key\n- `api_secret`: Your API Secret\n\nOr use session-based authentication after logging in.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "customer-api-v1"
 	},
@@ -318,6 +318,29 @@
 							"path": ["api", "method", "customer_api.api.create_sales_invoice"]
 						},
 						"description": "Complete invoice template using collection variables.\n\nUpdate the variables in Collection settings to customize:\n- customer_name\n- item_code_1, item_code_2\n- warehouse\n- tax_template\n- etc."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Invoice - POS Mode",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customer\": \"Walk-in Customer\",\n  \"pos_profile\": \"Main POS\",\n  \"items\": [\n    {\n      \"item_code\": \"ITEM-001\",\n      \"qty\": 2,\n      \"rate\": 50\n    },\n    {\n      \"item_code\": \"ITEM-002\",\n      \"qty\": 1,\n      \"rate\": 100\n    }\n  ],\n  \"update_stock\": 1,\n  \"submit\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/customer_api.api.create_sales_invoice",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "customer_api.api.create_sales_invoice"]
+						},
+						"description": "Create a POS invoice with POS Profile.\n\n**NEW FEATURE:**\n- POS Mode enabled (is_pos = 1)\n- Links to POS Profile for pre-configured settings\n- Perfect for retail/point-of-sale scenarios\n- Auto-submitted for immediate checkout\n\n**Response includes:**\n- is_pos: 1\n- pos_profile: \"Main POS\"\n\n**Benefits:**\n- Pre-configured taxes and charges\n- Default payment methods\n- Warehouse settings\n- Faster checkout process"
 					},
 					"response": []
 				}

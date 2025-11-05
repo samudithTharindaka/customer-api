@@ -10,6 +10,8 @@ Customer API is a Frappe app that provides RESTful API endpoints for managing cu
 
 - ✅ **Check Customer Availability** - Verify if a customer exists by name
 - ✅ **Create Customers** - Create customers with complete contact and address information
+- ✅ **Create Sales Invoices** - Create invoices with automatic inventory management
+- ✅ **POS Support** - Create POS invoices with POS Profile integration
 - ✅ **Automatic Linking** - Contacts and addresses are automatically linked to customers
 - ✅ **Duplicate Detection** - Prevents duplicate customer creation
 - ✅ **RESTful Design** - Standard HTTP methods and JSON responses
@@ -120,6 +122,80 @@ curl -X POST "https://your-site.com/api/method/customer_api.api.create_customer"
   }
 }
 ```
+
+### 3. Create Sales Invoice
+
+**Endpoint:** `POST /api/method/customer_api.api.create_sales_invoice`
+
+Create a sales invoice with automatic inventory management and optional POS support.
+
+**Parameters:**
+- `customer` (required): Customer ID or name
+- `items` (required): Array of items with `item_code`, `qty`, `rate`
+- `posting_date` (optional): Invoice date (YYYY-MM-DD)
+- `due_date` (optional): Payment due date
+- `update_stock` (optional): Update inventory (1=Yes, 0=No, default=1)
+- `submit` (optional): Submit invoice (1=Yes, 0=No, default=0)
+- `pos_profile` (optional): POS Profile name (enables POS mode)
+- `company`, `currency`, `taxes_and_charges`, `payment_terms_template`, `cost_center`, `project` (optional)
+
+**Example - Regular Invoice:**
+```bash
+curl -X POST "https://your-site.com/api/method/customer_api.api.create_sales_invoice" \
+  -H "Authorization: token API_KEY:API_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer": "John Doe",
+    "items": [
+      {"item_code": "ITEM-001", "qty": 5, "rate": 100}
+    ],
+    "update_stock": 1,
+    "submit": 0
+  }'
+```
+
+**Example - POS Invoice:**
+```bash
+curl -X POST "https://your-site.com/api/method/customer_api.api.create_sales_invoice" \
+  -H "Authorization: token API_KEY:API_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer": "Walk-in Customer",
+    "pos_profile": "Main POS",
+    "items": [
+      {"item_code": "ITEM-001", "qty": 2, "rate": 50}
+    ],
+    "update_stock": 1,
+    "submit": 1
+  }'
+```
+
+**Response:**
+```json
+{
+  "message": {
+    "success": true,
+    "invoice_id": "SINV-2025-00123",
+    "invoice_name": "SINV-2025-00123",
+    "customer": "John Doe",
+    "grand_total": 500.0,
+    "status": "Draft",
+    "is_pos": 0,
+    "pos_profile": null,
+    "update_stock": 1,
+    "message": "Sales invoice created successfully"
+  }
+}
+```
+
+**Features:**
+- ✅ Automatic inventory deduction
+- ✅ Automatic accounting entries
+- ✅ POS mode support with POS Profile
+- ✅ Taxes and discounts
+- ✅ Auto-submit option
+
+See [SALES_INVOICE_GUIDE.md](SALES_INVOICE_GUIDE.md) for complete documentation.
 
 ## Authentication
 
