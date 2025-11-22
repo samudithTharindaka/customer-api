@@ -1,0 +1,184 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:site_name",
+ "creation": "2025-11-22 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "site_name",
+  "site_url",
+  "enabled",
+  "webhook_secret",
+  "column_break_4",
+  "webhook_url",
+  "default_customer_group",
+  "default_territory",
+  "section_break_8",
+  "item_mapping_method",
+  "default_warehouse",
+  "column_break_11",
+  "auto_submit_invoices",
+  "update_stock_on_invoice",
+  "default_company",
+  "default_cost_center",
+  "section_break_16",
+  "total_webhooks_received",
+  "last_webhook_received",
+  "successful_invoices",
+  "failed_webhooks"
+ ],
+ "fields": [
+  {
+   "fieldname": "site_name",
+   "fieldtype": "Data",
+   "label": "Site Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "site_url",
+   "fieldtype": "Data",
+   "label": "Site URL",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "webhook_secret",
+   "fieldtype": "Password",
+   "label": "Webhook Secret"
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "webhook_url",
+   "fieldtype": "Data",
+   "label": "Webhook URL",
+   "read_only": 1
+  },
+  {
+   "fieldname": "default_customer_group",
+   "fieldtype": "Link",
+   "label": "Default Customer Group",
+   "options": "Customer Group"
+  },
+  {
+   "fieldname": "default_territory",
+   "fieldtype": "Link",
+   "label": "Default Territory",
+   "options": "Territory"
+  },
+  {
+   "fieldname": "section_break_8",
+   "fieldtype": "Section Break",
+   "label": "Invoice Settings"
+  },
+  {
+   "default": "SKU",
+   "fieldname": "item_mapping_method",
+   "fieldtype": "Select",
+   "label": "Item Mapping Method",
+   "options": "SKU\\nProduct Name\\nCustom Mapping"
+  },
+  {
+   "fieldname": "default_warehouse",
+   "fieldtype": "Link",
+   "label": "Default Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "column_break_11",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "auto_submit_invoices",
+   "fieldtype": "Check",
+   "label": "Auto Submit Invoices"
+  },
+  {
+   "default": "1",
+   "fieldname": "update_stock_on_invoice",
+   "fieldtype": "Check",
+   "label": "Update Stock on Invoice"
+  },
+  {
+   "fieldname": "default_company",
+   "fieldtype": "Link",
+   "label": "Default Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "default_cost_center",
+   "fieldtype": "Link",
+   "label": "Default Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_16",
+   "fieldtype": "Section Break",
+   "label": "Statistics"
+  },
+  {
+   "default": "0",
+   "fieldname": "total_webhooks_received",
+   "fieldtype": "Int",
+   "label": "Total Webhooks Received",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_webhook_received",
+   "fieldtype": "Datetime",
+   "label": "Last Webhook Received",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "successful_invoices",
+   "fieldtype": "Int",
+   "label": "Successful Invoices",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "failed_webhooks",
+   "fieldtype": "Int",
+   "label": "Failed Webhooks",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2025-11-22 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Customer API",
+ "name": "WordPress Site",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
+

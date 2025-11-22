@@ -1,0 +1,113 @@
+{
+ "actions": [],
+ "autoname": "format:WH-{#####}",
+ "creation": "2025-11-22 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "wordpress_site",
+  "woocommerce_order_id",
+  "status",
+  "column_break_3",
+  "created_invoice",
+  "created_customer",
+  "timestamp",
+  "section_break_7",
+  "webhook_payload",
+  "column_break_9",
+  "response_message",
+  "error_message"
+ ],
+ "fields": [
+  {
+   "fieldname": "wordpress_site",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "WordPress Site",
+   "options": "WordPress Site"
+  },
+  {
+   "fieldname": "woocommerce_order_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "WooCommerce Order ID"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Pending\\nSuccess\\nFailed"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "created_invoice",
+   "fieldtype": "Link",
+   "label": "Created Invoice",
+   "options": "Sales Invoice"
+  },
+  {
+   "fieldname": "created_customer",
+   "fieldtype": "Link",
+   "label": "Created Customer",
+   "options": "Customer"
+  },
+  {
+   "default": "Now",
+   "fieldname": "timestamp",
+   "fieldtype": "Datetime",
+   "label": "Timestamp"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_7",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "webhook_payload",
+   "fieldtype": "Code",
+   "label": "Webhook Payload",
+   "options": "JSON"
+  },
+  {
+   "fieldname": "column_break_9",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "response_message",
+   "fieldtype": "Text",
+   "label": "Response Message"
+  },
+  {
+   "fieldname": "error_message",
+   "fieldtype": "Text",
+   "label": "Error Message"
+  }
+ ],
+ "links": [],
+ "modified": "2025-11-22 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Customer API",
+ "name": "WordPress Webhook Log",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
+
